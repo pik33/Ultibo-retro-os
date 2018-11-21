@@ -1,0 +1,9 @@
+*.bak
+*.compiled
+*.elf
+*.lps
+*.o
+*.ppu
+*.s
+/lib/*.*
+
