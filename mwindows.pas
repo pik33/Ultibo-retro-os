@@ -416,7 +416,7 @@ end;
 procedure TWindows.Execute;
 
 var scr2,scr:integer;
-    wh:TWindow;
+    wh:TWindow32;
     t:int64;
     q:integer=0;
 
@@ -437,10 +437,10 @@ repeat
   lastchecked:=background.checkmouse;
   getrectanglelist;
   windowsdone:=false;
-  wh:=background;
+  wh:=background32;
   repeat
-  //  if scr=mainscreen+$800000 then scr2:=integer(p2) else scr2:=integer(p2+(xres+64)*(yres));
-    wh.draw(scr) ;
+    if peek(base+$71000)=0 then scr2:=integer(p2) else scr2:=integer(p2+(xres+64)*(yres));
+    wh.draw(scr2) ;
     wh:=wh.next;
   until wh=nil;
   panel.draw(scr);
@@ -1370,8 +1370,8 @@ if background32<>nil then   // there ia s background so create a normal window
   visible:=false;
   resizable:=true;
   prev:=who;
-  canvas:=getmem(wl*wh);  // get a memory for graphics. 8-bit only in this version
-  for i:=0 to wl*wh-1 do poke(cardinal(canvas)+i,0); // clear the graphic memory
+  canvas:=getmem(4*wl*wh);  // get a memory for graphics. 8-bit only in this version
+  for i:=0 to wl*wh-1 do poke(cardinal(canvas)+i,$FF); // clear the graphic memory      FF for testing
   title:=atitle;
   if atitle<>'' then     // create a decoration
     begin
@@ -1508,8 +1508,8 @@ else
 
 
 
-//if self=background then begin fastmove(mainscreen,dest,xres*yres); end
-//else
+if self=background32 then begin fastmove(mainscreen,dest,xres*yres*4); end
+else
   begin
 
   if buttons<>nil then buttons.draw;                      // update the wigdets
@@ -1529,7 +1529,7 @@ else
       begin
       dxr:=rectangle^.x1-x;   // todo if dxr<0, correct the rectangle
       dyr:=rectangle^.y1-y;
-      blit8(integer(canvas),vx+dxr,vy+dyr,dest,rectangle^.x1,rectangle^.y1, rectangle^.x2-rectangle^.x1+1,rectangle^.y2-rectangle^.y1+1,wl,xres);
+      blit32(integer(canvas),vx+dxr,vy+dyr,dest,rectangle^.x1,rectangle^.y1, rectangle^.x2-rectangle^.x1+1,rectangle^.y2-rectangle^.y1+1,wl*4,xres*4);
       end;
   until rectangle^.next=nil;
   end;
@@ -3444,7 +3444,7 @@ procedure getrectanglelist;
 
 var rect,r2:PRectangle ;
 
-    window:TWindow;
+    window:TWindow32;
     dg,dh,dt,dl,dsh,dsv,dm:integer;
     x1,x2,y1,y2:integer;
     vcount,rcount:integer;
@@ -3460,7 +3460,8 @@ if arectangle.handle=0 then
   while rect^.prev<>nil do begin rect:=rect^.prev; dispose(rect^.next); end;
   end;
 
-window:=background;
+//window:=background;
+window:=background32;
 Arectangle.next:=nil;
 Arectangle.prev:=nil;
 Arectangle.x1:=0;
@@ -3571,7 +3572,7 @@ for i:=0 to vcount-2 do
 
 // assign rectangles to windows
 
-window:=background;
+window:=background32;
 
 // go to the top window
 

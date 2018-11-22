@@ -9,6 +9,7 @@ uses
 
 procedure dma_blit(chn,from,x,y,too,x2,y2,len,lines,bpl1,bpl2:integer);
 procedure blit8(from,x,y,too,x2,y2,length,lines,bpl1,bpl2:integer);
+procedure blit32(from,x,y,too,x2,y2,length,lines,bpl1,bpl2:integer);
 //procedure aligned_blit8(from,x,y,too,x2,y2,length,lines,bpl1,bpl2:integer);
 procedure fill(start,len,color:integer);
 procedure fill32(start,len,color:integer);
@@ -50,6 +51,53 @@ var
      color16: array[0..7] of word     absolute _blitter_color;
      color32: array[0..3] of cardinal absolute _blitter_color;
 
+
+procedure blit32(from,x,y,too,x2,y2,length,lines,bpl1,bpl2:integer);
+
+// --- rev 20181122
+
+label p101,p999;
+
+begin
+if (length<=0) or (lines<=0) then goto p999;
+
+                  asm
+                  push {r0-r7}
+                  ldr r0,from
+                  ldr r1,x
+                  add r0,r0,r1,lsl #2
+                  ldr r2,y
+                  ldr r3,bpl1         //r3=bpl1
+                  mul r4,r3,r2
+                  add r0,r4           //r0=src start
+                  ldr r1,too
+                  ldr r2,x2
+                  add r1,r1,r2,lsl #2
+                  ldr r4,y2
+                  ldr r5,bpl2         //r5=bpl2
+                  ldr r2,lines        //r2=lines
+                  mul r6,r5,r4
+                  add r1,r6           //r1=dest start
+                  ldr r4,length       //r4=length
+
+                  add r7,r1,r4, lsl #2
+
+p101:             ldr r6,[r0],#4
+                  str r6,[r1],#4
+                  cmps r1,r7
+                  blt  p101
+
+                  add r0,r3
+                  sub r0,r0,r4, lsl #2
+                  add r1,r5
+                  mov r7,r1
+                  sub r1,r1,r4, lsl #2
+                  subs r2,#1
+                  bgt p101
+                  pop {r0-r7}
+                  end;
+p999:
+end;
 
 procedure blit8(from,x,y,too,x2,y2,length,lines,bpl1,bpl2:integer);
 
