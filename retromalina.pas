@@ -794,7 +794,7 @@ procedure initmachine(mode:integer);
 
 var i:integer;
     mousedata:TSprite;
-    c:cardinal;
+    c,cc:cardinal;
 
 begin
 
@@ -805,7 +805,7 @@ retropointer:=getalignedmem($20000000,$100000);
 retroscreen:=getalignedmem($1000000,$100000);
 remapram(cardinal(retropointer),base,$20000000);
 remapram(cardinal(retroscreen),mainscreen,$1000000);
-
+for c:=mainscreen to mainscreen+16000000 do poke(c,0);
 
 for c:=base to base+$FFFFF do poke(c,0);
 
@@ -891,6 +891,9 @@ amouse.start;
 
 akeyboard:=tkeyboard.create(true);
 akeyboard.start;
+for c:=0 to 99 do
+  for cc:=0 to 99 do
+    lpoke(mainscreen+4*1920*c+4*cc,$ff00);
 end;
 
 
@@ -1926,6 +1929,13 @@ end;
 
 procedure cls(c:integer);
 
+begin
+box32(0,0,xres,yres,c);
+end;
+
+
+procedure cls8(c:integer);
+
 // --- rev 20170111
 
 var c2, i,l:integer;
@@ -2040,9 +2050,14 @@ procedure box32(x,y,l,h,c:integer);
 label p101,p102,p999;
 
 var screenptr:cardinal;
+    xr:integer;
 
 begin
- if c<256 then c:=ataripallette[c];
+    x:=100; y:=100; l:=100; h:=100;
+
+xr:=xres*4;
+
+if c<256 then c:=ataripallette[c] else c:=c and $FFFFFF;
 screenptr:=displaystart;
 if x<0 then begin l:=l+x; x:=0; if l<1 then goto p999; end;
 if x>=xres then goto p999;
@@ -2053,30 +2068,31 @@ if y+h>=yres then h:=yres-y;
 
 
              asm
-             push {r0-r6}
+             push {r0-r7}
+             ldr r7,xr  // bpl in r7
              ldr r2,y
-             mov r3,#1792*4
+             mov r3,r7
              ldr r1,x
-             mul r3,r3,r2
-             lsl r1,#2
+             mul r3,r3,r2  // r3=y*bpl
+             lsl r1,#2     // r1=x*4
              ldr r4,l
-             lsl r4,#2
-             add r3,r1
+             lsl r4,#2     // r4=l*4
+             add r3,r1     // r3=start draw
              ldr r0,screenptr
              add r0,r3
-             ldr r3,c
+             ldr r3,c      // r3=color
              ldr r6,h
 
 p102:        mov r5,r4
 p101:        str r3,[r0],#4  // inner loop
              subs r5,#4
              bne p101
-             add r0,#1792*4
+             add r0,r7
              sub r0,r4
              subs r6,#1
              bne p102
 
-             pop {r0-r6}
+             pop {r0-r7}
              end;
 
 p999:

@@ -438,12 +438,12 @@ repeat
   getrectanglelist;
   windowsdone:=false;
   wh:=background32;
-  repeat
+ // repeat
     if peek(base+$71000)=0 then scr2:=integer(p2) else scr2:=integer(p2+(xres+64)*(yres));
     wh.draw(scr2) ;
-    wh:=wh.next;
-  until wh=nil;
-  panel.draw(scr);
+//    wh:=wh.next;
+//  until wh=nil;
+ // panel.draw(scr);
   windowsdone:=true;
   wt:=gettime-t;
   repeat threadsleep(1) until screenaddr<>scr;
@@ -1508,8 +1508,8 @@ else
 
 
 
-if self=background32 then begin fastmove(mainscreen,dest,xres*yres*4); end
-else
+//if self=background32 then begin fastmove(mainscreen,dest,xres*yres*4); end
+//else
   begin
 
   if buttons<>nil then buttons.draw;                      // update the wigdets
@@ -1529,7 +1529,7 @@ else
       begin
       dxr:=rectangle^.x1-x;   // todo if dxr<0, correct the rectangle
       dyr:=rectangle^.y1-y;
-      blit32(integer(canvas),vx+dxr,vy+dyr,dest,rectangle^.x1,rectangle^.y1, rectangle^.x2-rectangle^.x1+1,rectangle^.y2-rectangle^.y1+1,wl*4,xres*4);
+      blit32(integer(canvas),vx+dxr,vy+dyr,dest,rectangle^.x1,rectangle^.y1, rectangle^.x2-rectangle^.x1+1,rectangle^.y2-rectangle^.y1+1,wl*4,256+xres*4);
       end;
   until rectangle^.next=nil;
   end;
